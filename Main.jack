@@ -1,0 +1,17 @@
+class Main {
+    function void main () {
+        // do Output.printString("Hello World");
+        // do Output.println();
+        var int randNum;
+        var BinaryGame game;
+
+        let game = BinaryGame.new();
+        do game.run();
+        // do game.drawBorder();
+        do game.dispose();
+        // do game.drawBinary();
+
+        return;
+    }
+
+}

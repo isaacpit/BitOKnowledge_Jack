@@ -1,0 +1,420 @@
+
+    // powers_of_two concept taken from 
+    // https://github.com/havivha/Nand2Tetris/blob/master/12/Math.jack
+
+class BinaryGame {
+    field string Title;
+    field int score;
+    field int value;
+    field int memAddress;
+    field Array spots;
+    field int seed;
+    static int powers_of_two; // credit havivha
+    field int lives; 
+    field boolean continue;
+    field int points;
+    field int level;
+
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    // credit to havivha, link at top of page
+    method int two_to_the(int power) {
+        return powers_of_two[power];
+    }
+
+    method void drawBorder() {
+        var int topX, topY, botX, botY, r, d;
+        var boolean black, white;
+        let black = true;
+        let white = false;
+        let r = 30;
+        let topX = 0;
+        let topY = 0;
+        let botX = 511;
+        let botY = 255;
+        do Screen.setColor(black);
+        do Screen.drawRectangle(0, 0, botX, botY);
+        do Screen.setColor(white);
+        do Screen.drawRectangle(topX + r, topY + r, 
+            botX - r, botY - r);
+        do Screen.setColor(black);
+        do Screen.drawCircle(r,r,r);
+        do Screen.drawCircle(botX-r, r, r);
+        return;
+    }
+    constructor BinaryGame new() {
+        var int i, j, key;
+        let j = 0;
+        let continue = true;
+        let spots = Array.new(8);
+        let score = 0;
+        let lives = 3;
+        let value = 0;
+        let memAddress = 500;
+        do Output.moveCursor(2,5);
+        let Title = "Welcome to Bit o' Knowledge!";
+        do Output.printString(Title);
+        do Output.println();
+        do Output.println();
+        do drawBorder();
+        do Output.moveCursor(12, 18);
+        do Output.printString("Please press a random key");
+        // do Output.moveCursor(13, 18);
+        // do Output.printString("Do not press return please");
+        let key = Keyboard.keyPressed();
+        while (key = 0) {
+            let key = Keyboard.keyPressed();
+            let j = j + 1;
+            do Sys.wait(250);
+        }
+        do Output.moveCursor(14, 18);
+        let seed = j + key;
+
+
+        do Screen.clearScreen();
+        do drawBorder();
+        do Sys.wait(1000);
+
+        // do Output.moveCursor(12, 10);
+        // do Output.printString("Hold any other key");
+        // let key = 0;
+        // let key = Keyboard.keyPressed();
+        // while (key = 0) {
+        //     let key = Keyboard.keyPressed();
+        //     do Sys.wait(100);
+        // }
+        do Output.moveCursor(10, 10);
+        do Output.printString("Enter integer from 1 to 10, 1 being easy,");
+        do Output.moveCursor(11, 10);
+        do Output.printString("1-2 is 4 bits");
+        do Output.moveCursor(12, 10);
+        do Output.printString("3-6 is 6 bits");
+        do Output.moveCursor(13, 10);
+        do Output.printString("7 + is 8 bits");
+        do Output.moveCursor(14,10);
+        let level = Keyboard.readInt("10 being hard, then press return:");
+        if (level < 1) {
+            let level = 1;
+        }
+        let i = 0;
+        while (i < 8) {
+            let spots[i] = 2700+ i;
+            let i = i + 1;
+        }
+        let i = 0;
+        while (i < 8) {
+            // do Output.printInt(spots[i]);
+            // do Output.println();
+            let i = i + 1;
+        }
+        do init();
+        return this;
+    }
+
+    // method int powerTwo(int i ) {
+    //     var int result;
+    //     let result = 2;
+    //     if ( i = 0 ) {
+    //         let result = 1;
+    //     }
+    //     else {
+    //         while (i > 0) {
+    //             let result = result * result;
+    //         }
+    //         let i = i - 1;
+    //     }
+    //     return result;
+    // }
+
+    method Array generateBin(int num) {
+        var Array binary;
+        var int i;
+        var int div;
+        let binary = Array.new(8);
+        // do Output.moveCursor(20 ,0);
+        // do Output.printString("value: ");
+        // do Output.printInt(num);
+        // do Output.println();
+        let i = 0;
+        while (i < 8) {
+
+            let div = num / two_to_the(7-i);
+            // do Output.printString("div:" );
+            // do Output.printInt(div);
+            // do Output.println();
+            if (div > 0) {
+                let binary[i] = 1;
+                let num = num - two_to_the(7-i);
+            }
+            else {
+                let binary[i] = 0;
+            }
+            let i = i + 1;
+        }
+        return binary;
+    }
+
+    method int drawBinary () {
+        var int i, j, guess;
+        var int rand;
+        var int rand2;
+        var string test;
+        var Array bin;
+        var int key;
+
+        
+        do Random.seed(seed);
+        let seed = Random.next();
+        
+        let value = 0;
+        let i = 0;
+        let j = 7;
+        if (level < 3) {
+            let value = Random.between(1, 16);
+        }
+        else {
+            if (level < 7) {
+                let value = Random.between(1, 64);
+            }
+            else {
+                let value = Random.between(1, 256);
+            }
+        }
+
+        // do Output.moveCursor(21,0);
+        // do Output.printString("seed = " );
+        // do Output.printInt(seed);
+        // do Output.println();
+        let bin = generateBin(value);
+        
+        while (i < 8) {
+            if (bin[i] = 1) {
+                do drawOne(spots[i]);
+            }
+            else {
+                do drawZero(spots[i]);
+            }
+            let i = i + 1;
+            let j = j - 1;
+        }
+
+        do Output.moveCursor(0, 55);     
+        do Output.printString("Lives: ");
+        do Output.printInt(lives);
+        do Output.println();
+        do Output.moveCursor(0, 0);
+        do Output.printString("Points: ");
+        do Output.printInt(points);
+        do Output.println();
+        do Output.printString("Your score: ");
+        do Output.printInt(score);
+        do Output.moveCursor(0, 26);
+        do Output.printString("Level: ");
+        do Output.printInt(level);
+        do Output.moveCursor(10,24);
+        do Output.printString("Guess the value:");
+        
+        let points = 999;   
+        // do Output.moveCursor(10, 24);
+        while (guess = 0) {
+            
+            do Output.moveCursor(0, 8);
+            let points = points - ( 3 * level );
+            if (points < 0) {
+                let guess = - 1;
+                let points = 0;
+                return guess;
+            }
+            do Output.printInt(points);
+            do Sys.wait(100);
+            let guess = Keyboard.keyPressed();
+        }
+        do Output.moveCursor(10,40);
+        let guess = Keyboard.readInt("");
+        return guess;
+    }
+
+    method boolean logic(int guess) {
+        var int x, y;
+        let x = 22;
+        let y = 10;
+        if (guess = value) {
+            do Screen.clearScreen();
+            do drawBorder();
+            do Output.moveCursor(y, x);
+            do Output.printString("Correct!");
+            do Output.println();
+            do Sys.wait(2000);
+            let score = score + points;
+        }
+        else {
+            do Screen.clearScreen();
+            do drawBorder();
+            do Output.moveCursor(y, x);
+            do Output.printString("Sorry, try again!");
+            do Output.moveCursor(y + 1, x);
+            do Output.printString("Correct value was: ");
+            do Output.printInt(value);
+            do Sys.wait(2000);
+            let lives = lives - 1;
+            if (lives = 0) {
+                let continue = false;
+            }
+        }
+        // do Output.moveCursor(y + 1, x);
+        // do Output.printString("Release any keys being held");
+
+
+        return continue;
+    }
+
+    method boolean gameOver() {
+        var int key;
+        var boolean result;
+        var int x, y;
+        let x = 13;
+        let y = 10;
+
+        do Screen.clearScreen();
+        do drawBorder();
+        do Output.moveCursor(y + 1, x);
+        do Output.printString("GAME OVER");
+        do Output.moveCursor(y + 2, x);
+        do Output.printString("Your score was: ");
+        do Output.printInt(score);
+        do Output.moveCursor(y + 3, x);
+        do Output.printString("Hold q if you want to quit");
+        do Output.moveCursor(y + 4, x);
+        do Output.printString("Press c to continue");
+        do Output.println();
+        do Output.moveCursor(y + 5, x);
+        do Output.printString("Hold any other key to change difficulty");
+        do Output.println();
+        do Sys.wait(2000);
+        let lives = 3;
+        let score = 0;
+        let key = Keyboard.keyPressed();
+        do Output.moveCursor(y+5, x);
+
+        while (key = 0) {
+            let key = Keyboard.keyPressed();
+        }
+        // debug
+        // do Output.printString("key pressed: ");
+        // do Output.printInt(key);
+        if (key = 81) {
+            let result = true;
+        }
+        else {
+            if (key = 67) {
+                let result = false;
+            }   
+            else {
+                let result = false;
+                do drawBorder();
+                do Output.moveCursor(8, 8);
+                let level = Keyboard.readInt("Please input a new difficulty 1 - 10: ");
+            }
+        }
+
+
+        // do Sys.wait(1000);
+        return result;
+    }
+    method void run() {
+        var boolean exit;
+        var int guess;
+
+        let exit = false;
+        while (~exit) {
+            do Screen.clearScreen();
+            do drawBorder();
+            // let value = Random.between(1, 255);
+            // do Output.moveCursor(10, 20);
+            let guess = drawBinary();
+            // let score = 1000;
+            // do Output.moveCursor(10, 24);
+            // let guess = Keyboard.readInt("Guess the value!");
+            // while (guess = 0) {
+            //     let score = score - 10;
+            //     do Sys.wait(250);
+            // }
+            let continue = logic(guess);
+            if (~continue) {
+                let continue = true;
+                let exit = gameOver();
+            }
+            // let score = 0;
+
+        }
+        return;
+    }
+
+
+    method void drawOne(int location) {
+        let memAddress = 16384+location;
+        do Memory.poke(memAddress+0, 2032);
+        do Memory.poke(memAddress+32, 2032);
+        do Memory.poke(memAddress+64, 2032);
+        do Memory.poke(memAddress+96, 2032);
+        do Memory.poke(memAddress+128, 1984);
+        do Memory.poke(memAddress+160, 1984);
+        do Memory.poke(memAddress+192, 1984);
+        do Memory.poke(memAddress+224, 1984);
+        do Memory.poke(memAddress+256, 1984);
+        do Memory.poke(memAddress+288, 1984);
+        do Memory.poke(memAddress+320, 1984);
+        do Memory.poke(memAddress+352, 1984);
+        do Memory.poke(memAddress+384, 1984);
+        do Memory.poke(memAddress+416, 8176);
+        do Memory.poke(memAddress+448, 8176);
+        do Memory.poke(memAddress+480, 8176);
+        return;
+    }
+
+    method void drawZero(int location) {
+        let memAddress = 16384+location;
+        do Memory.poke(memAddress+0, 8184);
+        do Memory.poke(memAddress+32, 8184);
+        do Memory.poke(memAddress+64, 8184);
+        do Memory.poke(memAddress+96, 7800);
+        do Memory.poke(memAddress+128, 7800);
+        do Memory.poke(memAddress+160, 7800);
+        do Memory.poke(memAddress+192, 7800);
+        do Memory.poke(memAddress+224, 7800);
+        do Memory.poke(memAddress+256, 7800);
+        do Memory.poke(memAddress+288, 7800);
+        do Memory.poke(memAddress+320, 7800);
+        do Memory.poke(memAddress+352, 7800);
+        do Memory.poke(memAddress+384, 8184);
+        do Memory.poke(memAddress+416, 8184);
+        do Memory.poke(memAddress+448, 8184);
+        do Memory.poke(memAddress+480, 8184);
+        return;
+    }
+    // credit to haviva, link at top of page
+    method void init() {
+        let powers_of_two = Array.new(16);
+        let powers_of_two[0] = 1;
+        let powers_of_two[1] = 2;
+        let powers_of_two[2] = 4;
+        let powers_of_two[3] = 8;
+        let powers_of_two[4] = 16;
+        let powers_of_two[5] = 32;
+        let powers_of_two[6] = 64;
+        let powers_of_two[7] = 128;
+        let powers_of_two[8] = 256;
+        let powers_of_two[9] = 512;
+        let powers_of_two[10] = 1024;
+        let powers_of_two[11] = 2048;
+        let powers_of_two[12] = 4096;
+        let powers_of_two[13] = 8192;
+        let powers_of_two[14] = 16384;
+        let powers_of_two[15] = 16384+16384;
+        return;
+    }
+}
